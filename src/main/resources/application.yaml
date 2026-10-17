@@ -13,3 +13,9 @@ spring:
     import: optional:file:.env[.properties]
   profiles:
     active: ${DEFAULT_PROFILE:local}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
