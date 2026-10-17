@@ -1,4 +1,4 @@
-package com.az.studyforge.exception;
+package com.az.studyforge.common.exception;
 
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
