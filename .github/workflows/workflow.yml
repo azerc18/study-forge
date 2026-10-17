@@ -15,5 +15,5 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
-      - run: mvn clean verify
+      - run: ./mvnw clean verify
 
