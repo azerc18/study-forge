@@ -1,4 +1,4 @@
-package com.az.studyforge.auth.entity;
+package com.az.studyforge.user.entity;
 
 public enum Role {
     USER,ADMIN

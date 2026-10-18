@@ -1,4 +1,4 @@
-package com.az.studyforge.auth.repository;
+package com.az.studyforge.user.repository;
 
 import com.az.studyforge.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;

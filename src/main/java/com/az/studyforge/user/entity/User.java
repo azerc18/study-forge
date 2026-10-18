@@ -1,4 +1,4 @@
-package com.az.studyforge.auth.entity;
+package com.az.studyforge.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

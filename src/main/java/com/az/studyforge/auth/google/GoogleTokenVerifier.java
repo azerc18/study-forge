@@ -1,4 +1,5 @@
 package com.az.studyforge.auth.google;
 
-public class GoogleTokenVerifier {
+public interface GoogleTokenVerifier {
+    GoogleUserInfo verify(String idToken);
 }
