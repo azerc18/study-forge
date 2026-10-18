@@ -5,6 +5,6 @@ import jakarta.validation.constraints.Size;
 
 public record GoogleLoginRequest(
     @NotBlank
-    @Size(max = 4069)
+    @Size(max = 4096)
     String idToken
 ) {}

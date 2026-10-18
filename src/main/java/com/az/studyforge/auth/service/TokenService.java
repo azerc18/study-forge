@@ -5,6 +5,8 @@ import com.az.studyforge.auth.entity.RefreshToken;
 
 import java.util.Optional;
 
-public interface RefreshTokenService {
+public interface TokenService {
     Optional<RefreshToken> refresh();
+    String generateAccessToken();
+    String generateRefreshToken();
 }

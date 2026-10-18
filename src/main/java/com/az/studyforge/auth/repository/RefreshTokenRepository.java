@@ -1,4 +1,4 @@
-package com.az.studyforge.auth;
+package com.az.studyforge.auth.repository;
 
 import com.az.studyforge.auth.entity.RefreshToken;
 import org.springframework.data.jpa.repository.JpaRepository;
