@@ -23,7 +23,7 @@ public class User {
     @Column(name = "google_sub",nullable = false, unique = true)
     private String googleSub;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
     @Column(name = "full_name")
