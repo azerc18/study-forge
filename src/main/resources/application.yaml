@@ -22,7 +22,7 @@ management:
 
 app:
   google:
-    client-id:${GOOGLE_CLIENT_ID}
+    client-id: ${GOOGLE_CLIENT_ID}
 
 security:
   jwt:

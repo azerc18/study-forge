@@ -1,11 +1,9 @@
-package com.az.studyforge.token;
+package com.az.studyforge.auth.service;
 
 import com.az.studyforge.auth.config.JwtProperties;
 import com.az.studyforge.auth.dto.ClientInfo;
 import com.az.studyforge.auth.entity.RefreshToken;
 import com.az.studyforge.auth.repository.RefreshTokenRepository;
-import com.az.studyforge.auth.service.TokenService;
-import com.az.studyforge.auth.service.TokenServiceImpl;
 import com.az.studyforge.common.utility.HashUtils;
 import com.az.studyforge.user.entity.User;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
@@ -23,11 +21,12 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
@@ -84,7 +83,8 @@ class TokenServiceImplTest {
         verify(refreshTokenRepository).save(captor.capture());
         RefreshToken saved = captor.getValue();
 
-        assertThat(saved.getExpiresAt()).isBeforeOrEqualTo(Instant.now().plus(Duration.ofDays(7)));
+        assertThat(saved.getExpiresAt())
+                .isCloseTo(Instant.now().plus(Duration.ofDays(7)), within(5, ChronoUnit.SECONDS));
     }
 
     @Test

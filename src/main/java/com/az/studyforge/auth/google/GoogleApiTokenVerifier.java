@@ -1,6 +1,7 @@
 package com.az.studyforge.auth.google;
 
-import com.az.studyforge.auth.exception.InvalidGoogleTokenException;
+import com.az.studyforge.common.exception.AppException;
+import com.az.studyforge.common.exception.ErrorCode;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -13,7 +14,7 @@ import java.security.GeneralSecurityException;
 import java.util.List;
 
 @Component
-public class GoogleApiTokenVerifier implements GoogleTokenVerifier{
+public class GoogleApiTokenVerifier implements GoogleTokenVerifier {
 
     private final GoogleIdTokenVerifier verifier;
 
@@ -26,15 +27,15 @@ public class GoogleApiTokenVerifier implements GoogleTokenVerifier{
 
     @Override
     public GoogleUserInfo verify(String idToken) {
-        try{
+        try {
             GoogleIdToken token = verifier.verify(idToken);
-            if(token == null) {
-                throw new InvalidGoogleTokenException("Invalid Google ID token");
+            if (token == null) {
+                throw new AppException(ErrorCode.INVALID_GOOGLE_TOKEN);
             }
 
             GoogleIdToken.Payload payload = token.getPayload();
-            if(!Boolean.TRUE.equals(payload.getEmailVerified())){
-                throw new InvalidGoogleTokenException("Email not verified");
+            if (!Boolean.TRUE.equals(payload.getEmailVerified())) {
+                throw new AppException(ErrorCode.INVALID_GOOGLE_TOKEN);
             }
 
             return new GoogleUserInfo(
@@ -43,8 +44,10 @@ public class GoogleApiTokenVerifier implements GoogleTokenVerifier{
                     (String) payload.get("name"),
                     (String) payload.get("picture")
             );
-        } catch (GeneralSecurityException | IOException e) {
-            throw new InvalidGoogleTokenException("Cannot verify Google ID token");
+        } catch (IllegalArgumentException e) {
+            throw new AppException(ErrorCode.INVALID_GOOGLE_TOKEN, e);
+        } catch (IOException | GeneralSecurityException e) {
+            throw new AppException(ErrorCode.GOOGLE_AUTH_UNAVAILABLE, e);
         }
     }
 }

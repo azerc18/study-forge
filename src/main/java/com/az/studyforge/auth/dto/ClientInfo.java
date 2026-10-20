@@ -1,4 +1,4 @@
 package com.az.studyforge.auth.dto;
 
-public class ClientInfo {
+public record ClientInfo(String userAgent, String ipAddress) {
 }

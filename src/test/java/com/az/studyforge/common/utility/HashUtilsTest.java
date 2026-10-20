@@ -1,4 +1,4 @@
-package com.az.studyforge.utility;
+package com.az.studyforge.common.utility;
 
 import com.az.studyforge.common.utility.HashUtils;
 import org.junit.jupiter.api.Test;
@@ -24,6 +24,6 @@ public class HashUtilsTest {
 
     @Test
     void sha256Hex_alwaysReturns64LowercaseHexChars() {
-        assertThat(HashUtils.sha256Hex("abc").matches(REGEX));
+        assertThat(HashUtils.sha256Hex("abc")).matches(REGEX);
     }
 }

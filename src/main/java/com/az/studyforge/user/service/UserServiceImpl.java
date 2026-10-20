@@ -1,6 +1,5 @@
 package com.az.studyforge.user.service;
 
-import com.az.studyforge.auth.google.GoogleUserInfo;
 import com.az.studyforge.user.dto.GoogleProfile;
 import com.az.studyforge.user.entity.User;
 import com.az.studyforge.user.repository.UserRepository;
@@ -18,13 +17,6 @@ public class UserServiceImpl implements UserService{
     @Override
     @Transactional
     public User upsertFromGoogle(GoogleProfile userInfo) {
-         userRepository.findByEmail(userInfo.email())
-                 .filter(other -> !other.getGoogleSub().equals(userInfo.sub()))
-                 .ifPresent(other -> {
-                     other.setEmail(null);
-                     userRepository.flush();
-                 });
-
          User user = userRepository.findByGoogleSub(userInfo.sub())
                  .orElseGet(() -> User.builder().googleSub(userInfo.sub()).build());
 
