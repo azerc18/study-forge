@@ -23,6 +23,7 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "Invalid or expired refresh token"),
 
     QUOTA_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Daily quota exceeded"),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),
     ;
 
     private final HttpStatus status;
