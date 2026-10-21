@@ -1,1 +1,12 @@
 @import "tailwindcss";
+
+@theme {
+    --color-brand: #c4faf8;        /* màu chủ đạo */
+    --color-brand-strong: #96f0eb; /* hover */
+    --color-brand-ink: #0b4f4c;    /* chữ đặt trên nền brand */
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+body {
+    @apply bg-white text-slate-900 antialiased;
+}
