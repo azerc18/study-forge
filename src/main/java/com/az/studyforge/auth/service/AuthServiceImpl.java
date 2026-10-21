@@ -3,6 +3,7 @@ package com.az.studyforge.auth.service;
 import com.az.studyforge.auth.dto.AuthResult;
 import com.az.studyforge.auth.dto.ClientInfo;
 import com.az.studyforge.auth.dto.GoogleLoginRequest;
+import com.az.studyforge.auth.dto.RotatedToken;
 import com.az.studyforge.auth.google.GoogleTokenVerifier;
 import com.az.studyforge.auth.google.GoogleUserInfo;
 import com.az.studyforge.common.exception.AppException;
@@ -41,5 +42,23 @@ public class AuthServiceImpl implements AuthService {
                 refreshToken,
                 UserResponse.from(user)
         );
+    }
+
+    @Override
+    public AuthResult refresh(String rawRefreshToken, ClientInfo clientInfo) {
+        RotatedToken rotatedToken = tokenService.rotateRefreshToken(rawRefreshToken, clientInfo);
+        User user = rotatedToken.user();
+
+        return new AuthResult(
+                tokenService.generateAccessToken(user),
+                tokenService.getAccessTokenTtl().toSeconds(),
+                rotatedToken.refreshToken(),
+                UserResponse.from(user)
+        );
+    }
+
+    @Override
+    public void logout(String rawRefreshToken) {
+        tokenService.revokeRefreshToken(rawRefreshToken);
     }
 }
