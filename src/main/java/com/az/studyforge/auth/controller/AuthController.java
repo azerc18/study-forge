@@ -13,10 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,16 +28,51 @@ public class AuthController {
     public ResponseEntity<ApiResponse<LoginResponse>> loginWithGoogle(
             @Valid @RequestBody GoogleLoginRequest request,
             HttpServletRequest http) {
-        ClientInfo clientInfo = new ClientInfo(
-                http.getHeader(HttpHeaders.USER_AGENT), http.getRemoteAddr());
 
-        AuthResult result = authService.loginWithGoogle(request, clientInfo);
+        AuthResult result = authService.loginWithGoogle(request, clientInfo(http));
 
         ApiResponse<LoginResponse> body = ApiResponse.success(LoginResponse.of(result), "Login successful");
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie(result.refreshToken()).toString())
                 .body(body);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<LoginResponse>> refresh(
+            @CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken,
+            HttpServletRequest http
+    ) {
+        AuthResult result = authService.refresh(refreshToken,clientInfo(http));
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, refreshCookie(result.refreshToken()).toString())
+                .body(ApiResponse.success(LoginResponse.of(result), "Token refreshed"));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(
+            @CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken) {
+
+        authService.logout(refreshToken);
+
+        return ResponseEntity.noContent()
+                .header(HttpHeaders.SET_COOKIE, clearRefreshCookie().toString())
+                .build();
+    }
+
+    private ClientInfo clientInfo(HttpServletRequest http) {
+        return new ClientInfo(http.getHeader(HttpHeaders.USER_AGENT), http.getRemoteAddr());
+    }
+
+    private ResponseCookie clearRefreshCookie() {
+        return ResponseCookie.from(REFRESH_COOKIE, "")
+                .httpOnly(true)
+                .secure(jwtProperties.cookieSecure())
+                .sameSite("Strict")
+                .path("/api/auth")
+                .maxAge(0)
+                .build();
     }
 
     private ResponseCookie refreshCookie(String token) {

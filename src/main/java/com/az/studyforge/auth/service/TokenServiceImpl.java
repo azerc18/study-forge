@@ -3,11 +3,15 @@ package com.az.studyforge.auth.service;
 import com.az.studyforge.auth.config.JwtProperties;
 import com.az.studyforge.auth.dto.AuthResult;
 import com.az.studyforge.auth.dto.ClientInfo;
+import com.az.studyforge.auth.dto.RotatedToken;
 import com.az.studyforge.auth.entity.RefreshToken;
 import com.az.studyforge.auth.repository.RefreshTokenRepository;
+import com.az.studyforge.common.exception.AppException;
+import com.az.studyforge.common.exception.ErrorCode;
 import com.az.studyforge.common.utility.HashUtils;
 import com.az.studyforge.user.entity.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
@@ -24,6 +28,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TokenServiceImpl implements TokenService {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final int REFRESH_TOKEN_BYTE = 32;
@@ -78,10 +83,44 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public AuthResult rotate(String rawToken, ClientInfo clientInfo) {
+    @Transactional(noRollbackFor = AppException.class)
+    public RotatedToken rotateRefreshToken(String rawToken, ClientInfo clientInfo) {
+        if(rawToken == null || rawToken.isBlank()){
+            throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
 
+        Instant now = Instant.now();
+        RefreshToken current = refreshTokenRepository.findByTokenHashWithUser(HashUtils.sha256Hex(rawToken))
+                .orElseThrow(()-> new AppException(ErrorCode.INVALID_REFRESH_TOKEN));
 
+        User user = current.getUser();
 
-        return null;
+        if(current.getRevokedAt() != null){
+            refreshTokenRepository.revokeAllByUserId(user.getId(),now);
+            log.warn("Refresh token reuse detected, revoked all sessions of user {}",user.getId());
+            throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        if(!current.getExpiresAt().isAfter(now)){
+            throw new AppException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
+
+        if(user.isLocked()){
+            throw new AppException(ErrorCode.ACCOUNT_LOCKED);
+        }
+
+        current.setRevokedAt(now);
+        String newRawToken = generateRefreshToken(user,clientInfo);
+        return new RotatedToken(user,newRawToken);
+    }
+
+    @Override
+    @Transactional
+    public void revokeRefreshToken(String rawToken) {
+        if(rawToken == null || rawToken.isBlank()) return;
+
+        refreshTokenRepository.findByTokenHash(HashUtils.sha256Hex(rawToken))
+                .filter(token -> token.getRevokedAt() == null)
+                .ifPresent(token -> token.setRevokedAt(Instant.now()));
     }
 }
