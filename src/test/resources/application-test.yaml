@@ -1,7 +1,8 @@
 app:
   google:
     client-id: test-client-id
-
+  generation:
+    worker-enabled: false
 security:
   jwt:
     secret: c3R1ZHlmb3JnZS10ZXN0LXNlY3JldC0zMmJ5dGVzISE

@@ -32,6 +32,12 @@ public enum ErrorCode {
     DOCUMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "Document not found"),
     STORAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Could not store the file"),
     DOCUMENT_NOT_READY(HttpStatus.CONFLICT, "Document is still being processed"),
+
+    // ===== Quiz set =====
+    INVALID_QUESTION_COUNT(HttpStatus.BAD_REQUEST, "This number of questions is not available for this document"),
+    QUIZ_SET_NOT_FOUND(HttpStatus.NOT_FOUND, "Quiz set not found"),
+    QUIZ_SET_NOT_READY(HttpStatus.CONFLICT, "Questions are not ready yet"),
+    QUIZ_SET_NOT_RETRYABLE(HttpStatus.CONFLICT, "Only failed quiz sets can be retried"),
     ;
 
     private final HttpStatus status;

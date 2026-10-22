@@ -32,6 +32,38 @@ app:
   document:
     max-pages: 100
     short-document-words: 1500
+  llm:
+    max-retries: 2
+    providers:
+      - name: deepseek
+        base-url: https://api.deepseek.com
+        api-key: ${DEEPSEEK_API_KEY:}
+        model: deepseek-flash
+        timeout: 120s
+        max-tokens: 8000
+        extra-body:
+          thinking:
+            type: disabled
+      - name: groq
+        base-url: https://api.groq.com/openai/v1
+        api-key: ${GROQ_API_KEY:}
+        model: ${GROQ_MODEL:llama-3.3-70b-versatile}
+        timeout: 60s
+        max-tokens: 8000
+      - name: gemini
+        base-url: https://generativelanguage.googleapis.com/v1beta/openai
+        api-key: ${GEMINI_API_KEY:}
+        model: ${GEMINI_MODEL:gemini-3.5-flash}
+        timeout: 120s
+        max-tokens: 8000
+  generation:
+    quota-zone: Asia/Ho_Chi_Minh
+    worker-enabled: true
+    max-concurrent-jobs: 2
+    llm-concurrency: 3
+    chunk-max-attempts: 2
+    stuck-timeout: 15m
+    top-up-rounds: 2
 
 security:
   jwt:
