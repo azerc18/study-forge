@@ -10,7 +10,7 @@ import com.az.studyforge.document.entity.Document;
 import com.az.studyforge.document.entity.FileType;
 import com.az.studyforge.document.event.DocumentUploadedEvent;
 import com.az.studyforge.document.repository.DocumentRepository;
-import com.az.studyforge.document.storage.FileStorage;
+import com.az.studyforge.document.filestorage.FileStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
