@@ -3,8 +3,10 @@ package com.az.studyforge.document.service;
 import com.az.studyforge.common.dto.PageResponse;
 import com.az.studyforge.document.dto.DocumentForGeneration;
 import com.az.studyforge.document.dto.DocumentResponse;
+import com.az.studyforge.document.dto.PageContent;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface DocumentService {
@@ -13,4 +15,5 @@ public interface DocumentService {
     DocumentResponse get(UUID userId, UUID documentId);
     void delete(UUID userId, UUID documentId);
     DocumentForGeneration getForGeneration(UUID userId, UUID documentId);
+    List<PageContent> getPagesForGeneration(UUID documentId);
 }

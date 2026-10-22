@@ -58,6 +58,12 @@ app:
         max-tokens: 8000
   generation:
     quota-zone: Asia/Ho_Chi_Minh
+    worker-enabled: true
+    max-concurrent-jobs: 2
+    llm-concurrency: 3
+    chunk-max-attempts: 2
+    stuck-timeout: 15m
+    top-up-rounds: 2
 
 security:
   jwt:

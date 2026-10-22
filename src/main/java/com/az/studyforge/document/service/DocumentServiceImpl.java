@@ -6,11 +6,13 @@ import com.az.studyforge.common.exception.ErrorCode;
 import com.az.studyforge.common.utility.HashUtils;
 import com.az.studyforge.document.dto.DocumentForGeneration;
 import com.az.studyforge.document.dto.DocumentResponse;
+import com.az.studyforge.document.dto.PageContent;
 import com.az.studyforge.document.dto.StoredFile;
 import com.az.studyforge.document.entity.Document;
 import com.az.studyforge.document.entity.DocumentStatus;
 import com.az.studyforge.document.entity.FileType;
 import com.az.studyforge.document.event.DocumentUploadedEvent;
+import com.az.studyforge.document.repository.DocumentPageRepository;
 import com.az.studyforge.document.repository.DocumentRepository;
 import com.az.studyforge.document.filestorage.FileStorage;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +29,7 @@ import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -41,6 +44,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final FileTypeDetector fileTypeDetector;
     private final FileStorage fileStorage;
     private final ApplicationEventPublisher eventPublisher;
+    private final DocumentPageRepository pageRepository;
 
     @Override
     @Transactional
@@ -110,6 +114,14 @@ public class DocumentServiceImpl implements DocumentService {
         Document d = findOwned(userId, documentId);
         if (d.getStatus() != DocumentStatus.READY) throw new AppException(ErrorCode.DOCUMENT_NOT_READY);
         return new DocumentForGeneration(d.getId(), d.getOriginalFilename(), d.getWordCount(), d.getFileHash());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PageContent> getPagesForGeneration(UUID documentId) {
+        return pageRepository.findByDocumentIdOrderByPageNumber(documentId).stream()
+                .map(p -> new PageContent(p.getPageNumber(), p.getContent()))
+                .toList();
     }
 
     private static String sanitizeFilename(String name) {
