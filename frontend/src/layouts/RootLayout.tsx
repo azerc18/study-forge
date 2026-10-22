@@ -1,4 +1,4 @@
-import { Link, Outlet, useLocation } from 'react-router'
+import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth } from '../features/auth/auth-context'
 
 const YEAR = new Date().getFullYear()
@@ -30,6 +30,14 @@ function UserMenu() {
     const { user } = me
     return (
         <div className="flex items-center gap-3">
+            <NavLink
+                to="/documents"
+                className={({ isActive }) =>
+                    `text-sm transition hover:text-slate-900 ${isActive ? 'font-medium text-slate-900' : 'text-slate-500'}`
+                }
+            >
+                Documents
+            </NavLink>
             <Link to="/profile" aria-label="Your profile" className="rounded-full transition hover:ring-2 hover:ring-brand">
                 {user.avatarUrl ? (
                     <img src={user.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-8 rounded-full" />
