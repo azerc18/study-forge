@@ -4,9 +4,11 @@ import com.az.studyforge.common.dto.PageResponse;
 import com.az.studyforge.common.exception.AppException;
 import com.az.studyforge.common.exception.ErrorCode;
 import com.az.studyforge.common.utility.HashUtils;
+import com.az.studyforge.document.dto.DocumentForGeneration;
 import com.az.studyforge.document.dto.DocumentResponse;
 import com.az.studyforge.document.dto.StoredFile;
 import com.az.studyforge.document.entity.Document;
+import com.az.studyforge.document.entity.DocumentStatus;
 import com.az.studyforge.document.entity.FileType;
 import com.az.studyforge.document.event.DocumentUploadedEvent;
 import com.az.studyforge.document.repository.DocumentRepository;
@@ -100,6 +102,14 @@ public class DocumentServiceImpl implements DocumentService {
     private Document findOwned(UUID userId, UUID documentId) {
         return documentRepository.findByIdAndUserIdAndDeletedAtIsNull(documentId, userId)
                 .orElseThrow(() -> new AppException(ErrorCode.DOCUMENT_NOT_FOUND));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DocumentForGeneration getForGeneration(UUID userId, UUID documentId) {
+        Document d = findOwned(userId, documentId);
+        if (d.getStatus() != DocumentStatus.READY) throw new AppException(ErrorCode.DOCUMENT_NOT_READY);
+        return new DocumentForGeneration(d.getId(), d.getOriginalFilename(), d.getWordCount(), d.getFileHash());
     }
 
     private static String sanitizeFilename(String name) {

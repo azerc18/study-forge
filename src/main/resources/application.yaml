@@ -56,6 +56,8 @@ app:
         model: ${GEMINI_MODEL:gemini-3.5-flash}
         timeout: 120s
         max-tokens: 8000
+  generation:
+    quota-zone: Asia/Ho_Chi_Minh
 
 security:
   jwt:

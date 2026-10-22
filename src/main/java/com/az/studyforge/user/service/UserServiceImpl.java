@@ -40,4 +40,13 @@ public class UserServiceImpl implements UserService{
         }
         return user;
     }
+
+    @Override
+    @Transactional
+    public User lockActiveUser(UUID userId) {
+        User user = userRepository.findByIdForUpdate(userId)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (user.isLocked()) throw new AppException(ErrorCode.ACCOUNT_LOCKED);
+        return user;
+    }
 }
