@@ -1,14 +1,18 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiError } from '../../lib/api.ts'
+import { ApiError } from '../../lib/api'
 import {
   createQuizSet,
   deleteQuizSet,
+  getEssayHistory,
   getQuestions,
+  getQuota,
   getQuizSet,
   isGenerating,
   listQuizSets,
   renameQuizSet,
   retryQuizSet,
+  submitEssay,
+  type EssayFeedback,
   type QuizSet,
 } from './api.ts'
 
@@ -20,6 +24,8 @@ export const quizKeys = {
   list: (page: number, documentId?: string) => ['quiz-sets', 'list', documentId ?? 'all', page] as const,
   detail: (id: string) => ['quiz-sets', 'detail', id] as const,
   questions: (id: string) => ['quiz-sets', 'questions', id] as const,
+  essayHistory: (questionId: string) => ['essay-feedback', questionId] as const,
+  quota: ['quiz-sets', 'quota'] as const,
 }
 
 const retryUnlessNotFound = (count: number, err: Error) =>
@@ -55,14 +61,24 @@ export function useQuestions(id: string, enabled: boolean) {
   })
 }
 
+/** Số lượt tạo còn lại hôm nay. */
+export function useQuota() {
+  return useQuery({ queryKey: quizKeys.quota, queryFn: getQuota, staleTime: 30_000 })
+}
+
 export function useCreateQuizSet() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: createQuizSet,
     onSuccess: (set) => {
       queryClient.setQueryData(quizKeys.detail(set.id), set) // trang tiến độ hiện ngay, không phải chờ tải
-      return queryClient.invalidateQueries({ queryKey: quizKeys.lists })
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: quizKeys.lists }),
+        queryClient.invalidateQueries({ queryKey: quizKeys.quota }),
+      ])
     },
+    // Hết lượt (429) → cập nhật lại số lượt để nút bị khoá đúng
+    onError: () => queryClient.invalidateQueries({ queryKey: quizKeys.quota }),
   })
 }
 
@@ -94,5 +110,26 @@ export function useRetryQuizSet() {
       queryClient.setQueryData(quizKeys.detail(set.id), set) // status QUEUED → useQuizSet tự poll lại
       return queryClient.invalidateQueries({ queryKey: quizKeys.lists })
     },
+  })
+}
+
+/** Các lần nộp bài tự luận của tôi cho 1 câu (mới nhất trước). Chỉ đổi khi tôi nộp bài → không cần tải lại. */
+export function useEssayHistory(questionId: string) {
+  return useQuery({
+    queryKey: quizKeys.essayHistory(questionId),
+    queryFn: () => getEssayHistory(questionId),
+    staleTime: Infinity,
+  })
+}
+
+export function useSubmitEssay(questionId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (answer: string) => submitEssay(questionId, answer),
+    // Thêm lần nộp mới vào đầu lịch sử luôn, khỏi phải gọi lại API
+    onSuccess: (feedback) =>
+      queryClient.setQueryData<EssayFeedback[]>(quizKeys.essayHistory(questionId), (old) =>
+        [feedback, ...(old ?? [])].slice(0, 20),
+      ),
   })
 }

@@ -97,6 +97,6 @@ public class QuizSetManagementServiceImpl implements QuizSetManagementService {
         List<String> rubric = q.getRubric() == null ? List.of() : List.of(json.readValue(q.getRubric(), String[].class));
 
         return new QuestionResponse(q.getId(), q.getOrderIndex(), q.getType(), q.getContent(), options,
-                q.getExplanation(), q.getModelAnswer(), rubric, List.copyOf(q.getSourcePages()));
+                q.getExplanation(), q.getModelAnswer(), rubric, List.copyOf(q.getSourcePages()),q.getTopic());
     }
 }

@@ -64,6 +64,9 @@ app:
     chunk-max-attempts: 2
     stuck-timeout: 15m
     top-up-rounds: 2
+  feedback:
+    daily-limit: 30
+    material-max-words: 3000
 
 security:
   jwt:
