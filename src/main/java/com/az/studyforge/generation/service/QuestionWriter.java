@@ -79,6 +79,7 @@ public class QuestionWriter {
                     .rubric(s.getRubric())
                     .sourcePages(new ArrayList<>(s.getSourcePages()))
                     .normalizedHash(s.getNormalizedHash())
+                    .topic(s.getTopic())
                     .build();
             for (QuestionOption o : s.getOptions()) {
                 copy.addOption(QuestionOption.builder()
@@ -116,6 +117,7 @@ public class QuestionWriter {
         Question q = Question.builder()
                 .quizSetId(quizSetId).chunkId(chunkId).orderIndex(order)
                 .content(g.content()).sourcePages(g.sourcePages()).normalizedHash(g.normalizedHash())
+                .topic(g.topic())
                 .build();
 
         switch (g) {

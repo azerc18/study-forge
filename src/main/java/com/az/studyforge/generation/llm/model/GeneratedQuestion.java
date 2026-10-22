@@ -6,4 +6,5 @@ public sealed interface GeneratedQuestion permits GeneratedMcq, GeneratedEssay {
     String content();
     List<Integer> sourcePages();
     String normalizedHash();
+    String topic();
 }

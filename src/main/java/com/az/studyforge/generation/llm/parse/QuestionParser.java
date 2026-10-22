@@ -18,6 +18,7 @@ public class QuestionParser {
     private static final int MAX_TEXT = 2000;
     private static final Pattern OPTION_PREFIX = Pattern.compile("^[A-Da-d][.):]\\s+");
     private static final Pattern CODE_FENCE = Pattern.compile("^```(?:json)?\\s*|\\s*```$");
+    private static final int MAX_TOPIC = 80;
 
     private final JsonMapper json;
 
@@ -71,21 +72,28 @@ public class QuestionParser {
         String question = text(node, "question");
         List<Integer> pages = sourcePages(node.path("sourcePages"), chunk);
         String hash = QuestionNormalizer.hash(question);
+        String topic = topic(node);                                       // mới
 
         return switch (type) {
-            case "MCQ" -> mcq(node, question, pages, hash);
-            case "ESSAY" -> essay(node, question, pages, hash);
+            case "MCQ" -> mcq(node, question, pages, hash, topic);
+            case "ESSAY" -> essay(node, question, pages, hash, topic);
             default -> throw new Rejected("unknown type '" + type + "'");
         };
     }
 
-    private GeneratedMcq mcq(JsonNode node, String question, List<Integer> pages, String hash) {
+    private static String topic(JsonNode node) {
+        String t = str(node.path("topic")).strip();
+        if (t.isEmpty()) return null;
+        return t.length() <= MAX_TOPIC ? t : t.substring(0, MAX_TOPIC).strip();
+    }
+
+    private GeneratedMcq mcq(JsonNode node, String question, List<Integer> pages, String hash, String topic) {
         JsonNode opts = node.path("options");
         List<String> options = new ArrayList<>(4);
 
-        if (opts.isObject()) {                               // {"A": "...", ...}: đúng định dạng đã yêu cầu
+        if (opts.isObject()) {
             for (String label : LABELS) options.add(text(opts, label));
-        } else if (opts.isArray() && opts.size() == 4) {     // ["...", ...]: model đôi khi trả dạng mảng
+        } else if (opts.isArray() && opts.size() == 4) {
             for (int i = 0; i < 4; i++) options.add(clean(str(opts.get(i)), "option " + LABELS.get(i)));
         } else {
             throw new Rejected("options must have exactly A, B, C, D");
@@ -101,10 +109,10 @@ public class QuestionParser {
         if (correct < 0) throw new Rejected("answer must be A, B, C or D");
 
         return new GeneratedMcq(question, List.copyOf(options), correct,
-                text(node, "explanation"), pages, hash);
+                text(node, "explanation"), pages, hash, topic);
     }
 
-    private GeneratedEssay essay(JsonNode node, String question, List<Integer> pages, String hash) {
+    private GeneratedEssay essay(JsonNode node, String question, List<Integer> pages, String hash, String topic) {
         JsonNode rubricNode = node.path("rubric");
         if (!rubricNode.isArray() || rubricNode.size() < 2 || rubricNode.size() > 6) {
             throw new Rejected("rubric must have 2-6 points");
@@ -112,7 +120,7 @@ public class QuestionParser {
         List<String> rubric = new ArrayList<>();
         for (int i = 0; i < rubricNode.size(); i++) rubric.add(clean(str(rubricNode.get(i)), "rubric point"));
 
-        return new GeneratedEssay(question, text(node, "modelAnswer"), List.copyOf(rubric), pages, hash);
+        return new GeneratedEssay(question, text(node, "modelAnswer"), List.copyOf(rubric), pages, hash, topic);
     }
 
     private List<Integer> sourcePages(JsonNode node, ChunkSpec chunk) {

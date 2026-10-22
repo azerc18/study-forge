@@ -60,6 +60,9 @@ public class Question {
     @Column(name = "normalized_hash", nullable = false, length = 64)
     private String normalizedHash;
 
+    @Column(length = 80)
+    private String topic;
+
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("label")
     @Builder.Default

@@ -76,4 +76,8 @@ public class QuizSet {
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
+
+    @Column(name = "use_cache", nullable = false)
+    @Builder.Default
+    private boolean useCache = true;
 }
