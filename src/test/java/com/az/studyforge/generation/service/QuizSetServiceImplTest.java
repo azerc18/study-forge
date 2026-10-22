@@ -29,10 +29,7 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
+import java.time.*;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -73,14 +70,14 @@ class QuizSetServiceImplTest {
 
     private QuizSetServiceImpl serviceAt(Instant now) {
         return new QuizSetServiceImpl(userService, documentService, limitPolicy, quizSetRepository,
-                jobRepository, new GenerationProperties(VN), Clock.fixed(now, ZoneOffset.UTC));
+                jobRepository, new GenerationProperties(VN, 2, 3, 2, Duration.ofMinutes(15), 2),
+                Clock.fixed(now, ZoneOffset.UTC));
     }
 
     private CreateQuizSetRequest validRequest() {
         return new CreateQuizSetRequest(documentId, QuestionType.MCQ, 10, OutputLanguage.VI, null);
     }
 
-    /** Luồng hợp lệ: user, document, policy đều cho qua; đã dùng {@code used} lượt hôm nay. */
     private void givenValid(long used) {
         when(userService.lockActiveUser(userId)).thenReturn(user);
         when(documentService.getForGeneration(userId, documentId)).thenReturn(doc);
