@@ -1,6 +1,7 @@
 package com.az.studyforge.user.controller;
 
 import com.az.studyforge.common.dto.ApiResponse;
+import com.az.studyforge.common.security.CurrentUser;
 import com.az.studyforge.user.dto.MeResponse;
 import com.az.studyforge.user.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,6 @@ public class UserController {
 
     @GetMapping("/me")
     public ApiResponse<MeResponse> me(@AuthenticationPrincipal Jwt jwt) {
-        UUID userId = UUID.fromString(jwt.getSubject());
-        return ApiResponse.success(MeResponse.from(userService.getActiveUser(userId)));
+        return ApiResponse.success(MeResponse.from(userService.getActiveUser(CurrentUser.id(jwt))));
     }
 }

@@ -13,6 +13,10 @@ spring:
     import: optional:file:.env[.properties]
   profiles:
     active: ${DEFAULT_PROFILE:local}
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 21MB
 
 management:
   endpoints:
@@ -23,6 +27,11 @@ management:
 app:
   google:
     client-id: ${GOOGLE_CLIENT_ID}
+  storage:
+    local-dir: ${STORAGE_DIR:./storage/uploads}
+    document:
+      max-pages: 100
+      short-document-words: 1500
 
 security:
   jwt:
@@ -31,3 +40,5 @@ security:
     access-token-ttl: 15m
     refresh-token-ttl: 7d
     cookie-secure: true
+
+
