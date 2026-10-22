@@ -17,4 +17,12 @@ public final class HashUtils {
             throw new IllegalStateException("SHA-256 not available", e);
         }
     }
+
+    public static MessageDigest newSha256() {
+        try {
+            return MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 not available", e);
+        }
+    }
 }

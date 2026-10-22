@@ -24,6 +24,14 @@ public enum ErrorCode {
 
     QUOTA_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Daily quota exceeded"),
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "User not found"),
+
+    // ===== Document =====
+    EMPTY_FILE(HttpStatus.BAD_REQUEST, "File is empty"),
+    FILE_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "File exceeds the 20 MB limit"),
+    UNSUPPORTED_FILE_TYPE(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Only PDF and PPTX files are supported"),
+    DOCUMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "Document not found"),
+    STORAGE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Could not store the file"),
+    DOCUMENT_NOT_READY(HttpStatus.CONFLICT, "Document is still being processed"),
     ;
 
     private final HttpStatus status;
