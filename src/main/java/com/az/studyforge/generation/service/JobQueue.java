@@ -71,4 +71,19 @@ public class JobQueue {
                  WHERE status = 'RUNNING' AND locked_at < now() - (? * interval '1 second')
                 """, timeout.toSeconds());
     }
+
+    public void cancelQueued(UUID quizSetId) {
+        jdbc.update("""
+            UPDATE generation_jobs
+               SET status = 'DONE', last_error = 'Cancelled: quiz set deleted', updated_at = now()
+             WHERE quiz_set_id = ? AND status = 'QUEUED'""", quizSetId);
+    }
+
+    public boolean requeueFailed(UUID quizSetId) {
+        return jdbc.update("""
+            UPDATE generation_jobs
+               SET status = 'QUEUED', attempts = 0, next_run_at = now(),
+                   locked_by = NULL, locked_at = NULL, last_error = NULL, updated_at = now()
+             WHERE quiz_set_id = ? AND status = 'FAILED'""", quizSetId) == 1;
+    }
 }
