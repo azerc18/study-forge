@@ -19,13 +19,12 @@ function CallToAction() {
         return (
             <div className="flex flex-col items-center gap-3">
                 <p className="text-slate-600">Welcome back, {firstName}.</p>
-                <button
-                    type="button"
-                    disabled
-                    className="cursor-not-allowed rounded-full bg-brand px-6 py-3 font-medium text-brand-ink opacity-60"
+                <Link
+                    to="/documents"
+                    className="rounded-full bg-brand px-7 py-3 font-medium text-brand-ink transition hover:bg-brand-strong"
                 >
-                    Upload a document · coming soon
-                </button>
+                    Upload a document
+                </Link>
             </div>
         )
     }

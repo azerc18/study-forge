@@ -5,6 +5,8 @@ import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import ProfilePage from './pages/ProfilePage'
 import NotFoundPage from './pages/NotFoundPage'
+import DocumentsPage from './pages/DocumentsPage'
+import DocumentDetailPage from './pages/DocumentDetailPage'
 
 export const router = createBrowserRouter([
     {
@@ -16,7 +18,11 @@ export const router = createBrowserRouter([
             {
                 // Các route cần đăng nhập đặt trong nhóm này
                 element: <RequireAuth />,
-                children: [{ path: 'profile', element: <ProfilePage /> }],
+                children: [
+                    { path: 'profile', element: <ProfilePage /> },
+                    { path: 'documents', element: <DocumentsPage /> },
+                    { path: 'documents/:id', element: <DocumentDetailPage /> },
+                ],
             },
         ],
     },
