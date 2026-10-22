@@ -1,6 +1,8 @@
-import { useState, type ReactNode } from 'react'
+import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import { useToast } from '../components/toast/toast-context'
 import { ApiError } from '../lib/api'
+import { buttonClass } from '../components/ui/button.ts'
 import {
   isProcessing,
   type DocumentItem,
@@ -8,21 +10,13 @@ import {
   type OutputLanguage,
   type QuestionType,
 } from '../features/documents/api'
-import DeleteButton from '../features/documents/DeleteButton'
+import DeleteButton from '../features/documents/DeleteButton.tsx'
 import StatusBadge from '../features/documents/StatusBadge'
 import { formatBytes, formatDate, formatNumber } from '../features/documents/format'
 import { useDeleteDocument, useDocument, useGenerationOptions } from '../features/documents/queries'
-
-const TYPE_LABELS: Record<QuestionType, string> = {
-  MCQ: 'Multiple choice',
-  ESSAY: 'Essay',
-  MIXED: 'Mixed',
-}
-
-const LANGUAGE_LABELS: Record<OutputLanguage, string> = {
-  EN: 'English',
-  VI: 'Tiếng Việt',
-}
+import { createErrorMessage, LANGUAGE_LABELS, TYPE_LABELS } from '../features/quizzes/labels'
+import QuizSetRow from '../features/quizzes/QuizSetRow'
+import { useCreateQuizSet, useQuizSets } from '../features/quizzes/queries'
 
 /** Nút chọn dạng "viên thuốc", dùng cho cả 3 nhóm lựa chọn. */
 function Choice({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: ReactNode }) {
@@ -51,17 +45,33 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function PracticeSetForm({ options }: { options: GenerationOptions }) {
+function PracticeSetForm({ doc, options }: { doc: DocumentItem; options: GenerationOptions }) {
   const [type, setType] = useState<QuestionType>('MCQ')
   const [count, setCount] = useState<number | null>(null)
   const [language, setLanguage] = useState<OutputLanguage>('EN')
+  const [title, setTitle] = useState('')
+  const create = useCreateQuizSet()
+  const navigate = useNavigate()
+  const toast = useToast()
 
   const counts = options.questionCounts[type]
   // Đổi dạng câu hỏi mà số câu cũ không còn hợp lệ thì tự lấy lựa chọn đầu tiên (tính luôn khi render, không cần effect)
   const selectedCount = count != null && counts.includes(count) ? count : counts[0]
+  const defaultTitle = doc.originalFilename.replace(/\.[^.]+$/, '')
+
+  function submit(e: FormEvent) {
+    e.preventDefault()
+    create.mutate(
+      { documentId: doc.id, questionType: type, count: selectedCount, language, title: title.trim() || undefined },
+      {
+        onSuccess: (set) => navigate(`/quiz-sets/${set.id}`),
+        onError: (err) => toast.show(createErrorMessage(err), 'error'),
+      },
+    )
+  }
 
   return (
-    <div className="space-y-6">
+    <form onSubmit={submit} className="space-y-6">
       <Field label="Question type">
         {(Object.keys(TYPE_LABELS) as QuestionType[]).map((t) => (
           <Choice key={t} selected={t === type} onClick={() => setType(t)}>
@@ -86,22 +96,54 @@ function PracticeSetForm({ options }: { options: GenerationOptions }) {
         ))}
       </Field>
 
+      <div>
+        <label htmlFor="quiz-title" className="text-xs font-medium tracking-wide text-slate-500 uppercase">
+          Title <span className="normal-case">(optional)</span>
+        </label>
+        <input
+          id="quiz-title"
+          value={title}
+          maxLength={200}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder={defaultTitle}
+          className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none placeholder:text-slate-400 focus:border-brand-ink/40 focus:ring-2 focus:ring-brand"
+        />
+      </div>
+
       {options.shortDocument && (
         <p className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
           This document is short ({formatNumber(options.wordCount)} words), so a set can have at most 10 questions.
         </p>
       )}
 
-      <div className="flex flex-col items-start gap-2 pt-2 sm:flex-row sm:items-center sm:gap-4">
+      <div className="pt-2">
         <button
-          type="button"
-          disabled
-          className="cursor-not-allowed rounded-full bg-brand px-6 py-3 font-medium text-brand-ink opacity-60"
+          type="submit"
+          disabled={create.isPending}
+          className="rounded-full bg-brand px-6 py-3 font-medium text-brand-ink transition hover:bg-brand-strong disabled:cursor-wait disabled:opacity-60"
         >
-          Generate {selectedCount} questions
+          {create.isPending ? 'Starting…' : `Generate ${selectedCount} questions`}
         </button>
-        <span className="text-xs text-slate-400">Question generation is coming soon.</span>
       </div>
+    </form>
+  )
+}
+
+/** Các bộ đề đã tạo từ tài liệu này (chỉ hiện khi có). */
+function DocumentQuizSets({ documentId }: { documentId: string }) {
+  const { data } = useQuizSets(0, documentId)
+  if (!data || data.content.length === 0) return null
+
+  return (
+    <div className="mt-6 rounded-3xl border border-slate-100 bg-white/80 px-6 py-2 shadow-sm">
+      <p className="pt-4 text-xs font-medium tracking-wide text-slate-500 uppercase">
+        Quiz sets from this document
+      </p>
+      <ul className="divide-y divide-slate-100">
+        {data.content.map((set) => (
+          <QuizSetRow key={set.id} set={set} />
+        ))}
+      </ul>
     </div>
   )
 }
@@ -115,7 +157,7 @@ function ReadyPanel({ doc }: { doc: DocumentItem }) {
   if (options.isError) {
     return <p className="text-sm text-red-600">Couldn't load the options for this document.</p>
   }
-  return <PracticeSetForm options={options.data} />
+  return <PracticeSetForm doc={doc} options={options.data} />
 }
 
 function StatusPanel({ doc }: { doc: DocumentItem }) {
@@ -148,7 +190,7 @@ export default function DocumentDetailPage() {
   const remove = useDeleteDocument()
 
   const backLink = (
-    <Link to="/documents" className="text-sm text-slate-500 transition hover:text-slate-900">
+    <Link to="/documents" className={buttonClass('secondary', 'sm')}>
       ← All documents
     </Link>
   )
@@ -200,9 +242,12 @@ export default function DocumentDetailPage() {
         </div>
       </div>
 
+      {doc.status === 'READY' && <DocumentQuizSets documentId={doc.id} />}
+
       <div className="mt-4 flex justify-end">
         <DeleteButton
           label="Delete document"
+          size="md"
           pending={remove.isPending}
           onConfirm={() => remove.mutate(doc.id, { onSuccess: () => navigate('/documents', { replace: true }) })}
         />

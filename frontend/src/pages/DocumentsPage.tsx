@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { buttonClass } from '../components/ui/button.ts'
 import DocumentRow from '../features/documents/DocumentRow'
 import UploadDropzone from '../features/documents/UploadDropzone'
 import { useDeleteDocument, useDocuments } from '../features/documents/queries'
@@ -77,7 +78,7 @@ export default function DocumentsPage() {
               type="button"
               disabled={page === 0}
               onClick={() => setPage(page - 1)}
-              className="rounded-full px-3 py-1 text-slate-600 transition hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent"
+              className={buttonClass('secondary', 'sm')}
             >
               ← Newer
             </button>
@@ -88,7 +89,7 @@ export default function DocumentsPage() {
               type="button"
               disabled={!data.hasNext}
               onClick={() => setPage(page + 1)}
-              className="rounded-full px-3 py-1 text-slate-600 transition hover:bg-slate-100 disabled:opacity-40 disabled:hover:bg-transparent"
+              className={buttonClass('secondary', 'sm')}
             >
               Older →
             </button>

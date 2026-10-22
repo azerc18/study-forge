@@ -1,5 +1,12 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth } from '../features/auth/auth-context'
+import { buttonClass } from '../components/ui/button.ts'
+
+/** Tab đang mở: nền màu brand; tab khác: chữ xám, rê chuột thì có nền nhạt. */
+const navClass = ({ isActive }: { isActive: boolean }) =>
+    `rounded-full px-3 py-1.5 text-xs font-medium transition sm:px-4 sm:text-sm ${
+        isActive ? 'bg-brand text-brand-ink shadow-sm' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+    }`
 
 const YEAR = new Date().getFullYear()
 
@@ -7,7 +14,7 @@ function Logo() {
     return (
         <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
             <span className="grid size-7 place-items-center rounded-lg bg-brand text-sm text-brand-ink">S</span>
-            StudyForge
+            <span className="hidden sm:inline">StudyForge</span>
         </Link>
     )
 }
@@ -29,15 +36,15 @@ function UserMenu() {
 
     const { user } = me
     return (
-        <div className="flex items-center gap-3">
-            <NavLink
-                to="/documents"
-                className={({ isActive }) =>
-                    `text-sm transition hover:text-slate-900 ${isActive ? 'font-medium text-slate-900' : 'text-slate-500'}`
-                }
-            >
-                Documents
-            </NavLink>
+        <div className="flex items-center gap-2 whitespace-nowrap sm:gap-3">
+            <nav className="flex items-center gap-1 rounded-full bg-white/80 p-1 shadow-sm ring-1 ring-slate-200">
+                <NavLink to="/documents" className={navClass}>
+                    Documents
+                </NavLink>
+                <NavLink to="/quiz-sets" className={navClass}>
+                    Quiz sets
+                </NavLink>
+            </nav>
             <Link to="/profile" aria-label="Your profile" className="rounded-full transition hover:ring-2 hover:ring-brand">
                 {user.avatarUrl ? (
                     <img src={user.avatarUrl} alt="" referrerPolicy="no-referrer" className="size-8 rounded-full" />
@@ -47,13 +54,12 @@ function UserMenu() {
           </span>
                 )}
             </Link>
-            <button
-                type="button"
-                onClick={() => void signOut()}
-                className="text-sm text-slate-500 transition hover:text-slate-900"
-            >
-                Sign out
-            </button>
+            {/* Điện thoại: ẩn nút này cho đỡ chật, vẫn đăng xuất được ở trang Profile */}
+            <span className="hidden sm:inline-flex">
+                <button type="button" onClick={() => void signOut()} className={buttonClass('secondary', 'sm')}>
+                    Sign out
+                </button>
+            </span>
         </div>
     )
 }
