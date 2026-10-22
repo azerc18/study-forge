@@ -1,46 +1,51 @@
 import { useState } from 'react'
+import { buttonClass, type ButtonSize } from '../../components/ui/button.ts'
 
 interface Props {
   onConfirm: () => void
   pending: boolean
   label?: string
+  size?: ButtonSize
 }
 
-/** Xoá 2 bước: bấm lần đầu hiện "Delete? Yes / No", tránh xoá nhầm mà không cần hộp thoại. */
-export default function DeleteButton({ onConfirm, pending, label = 'Delete' }: Props) {
+/** Xoá 2 bước: bấm lần đầu hiện "Delete? [Yes, delete] [Cancel]", tránh xoá nhầm mà không cần hộp thoại. */
+export default function DeleteButton({ onConfirm, pending, label = 'Delete', size = 'sm' }: Props) {
   const [asking, setAsking] = useState(false)
 
-  if (pending) return <span className="text-xs text-slate-400">Deleting…</span>
+  if (pending) {
+    return (
+      <button type="button" disabled className={buttonClass('danger', size)}>
+        Deleting…
+      </button>
+    )
+  }
 
   if (!asking) {
     return (
-      <button
-        type="button"
-        onClick={() => setAsking(true)}
-        className="rounded-full px-2.5 py-1 text-xs text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-      >
+      <button type="button" onClick={() => setAsking(true)} className={buttonClass('danger', size)}>
+        <TrashIcon />
         {label}
       </button>
     )
   }
 
   return (
-    <span className="inline-flex items-center gap-1 text-xs">
-      <span className="text-slate-500">Delete?</span>
-      <button
-        type="button"
-        onClick={onConfirm}
-        className="rounded-full px-2 py-1 font-medium text-red-600 transition hover:bg-red-50"
-      >
-        Yes
+    <span className="inline-flex items-center gap-2">
+      <span className="hidden text-xs text-slate-500 sm:inline">Are you sure?</span>
+      <button type="button" onClick={onConfirm} className={buttonClass('dangerSolid', size)}>
+        Yes, delete
       </button>
-      <button
-        type="button"
-        onClick={() => setAsking(false)}
-        className="rounded-full px-2 py-1 text-slate-500 transition hover:bg-slate-100"
-      >
-        No
+      <button type="button" onClick={() => setAsking(false)} className={buttonClass('secondary', size)}>
+        Cancel
       </button>
     </span>
+  )
+}
+
+function TrashIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3.5" aria-hidden>
+      <path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   )
 }

@@ -25,6 +25,7 @@ interface ApiResponse<T> {
   message?: string
   errorCode?: string
   result?: T
+  details?: unknown
 }
 
 interface LoginResult {
@@ -37,11 +38,14 @@ interface LoginResult {
 export class ApiError extends Error {
   readonly status: number
   readonly code?: string
+  /** Thông tin thêm từ backend, ví dụ QUOTA_EXCEEDED có { dailyQuota, resetsAt } */
+  readonly details?: unknown
 
-  constructor(status: number, code: string | undefined, message: string) {
+  constructor(status: number, code: string | undefined, message: string, details?: unknown) {
     super(message)
     this.status = status
     this.code = code
+    this.details = details
   }
 }
 
@@ -61,7 +65,7 @@ function toResult<T>(status: number, statusText: string, text: string): T {
     body = null
   }
   if (status < 200 || status >= 300 || !body) {
-    throw new ApiError(status, body?.errorCode, body?.message ?? statusText)
+    throw new ApiError(status, body?.errorCode, body?.message ?? statusText, body?.details)
   }
   return body.result as T
 }
