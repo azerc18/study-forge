@@ -29,9 +29,9 @@ app:
     client-id: ${GOOGLE_CLIENT_ID}
   storage:
     local-dir: ${STORAGE_DIR:./storage/uploads}
-    document:
-      max-pages: 100
-      short-document-words: 1500
+  document:
+    max-pages: 100
+    short-document-words: 1500
 
 security:
   jwt:
