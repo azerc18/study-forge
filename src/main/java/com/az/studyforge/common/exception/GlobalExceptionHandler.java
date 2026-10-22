@@ -74,8 +74,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        return build(ErrorCode.VALIDATION_ERROR, Map.of(ex.getName(), "Invalid value"));
+    ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+        return build(ErrorCode.VALIDATION_ERROR, ErrorCode.VALIDATION_ERROR.getDefaultMessage(),
+                Map.of(e.getName(), "Invalid value"));
     }
 
     private ResponseEntity<ApiResponse<Void>> build(ErrorCode code, String message, Object details) {
