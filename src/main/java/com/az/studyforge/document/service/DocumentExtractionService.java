@@ -9,7 +9,7 @@ import com.az.studyforge.document.extraction.TextExtractor;
 import com.az.studyforge.document.extraction.TextNormalizer;
 import com.az.studyforge.document.repository.DocumentPageRepository;
 import com.az.studyforge.document.repository.DocumentRepository;
-import com.az.studyforge.document.storage.FileStorage;
+import com.az.studyforge.document.filestorage.FileStorage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

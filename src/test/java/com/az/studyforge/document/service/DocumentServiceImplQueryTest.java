@@ -7,7 +7,7 @@ import com.az.studyforge.document.entity.Document;
 import com.az.studyforge.document.entity.DocumentStatus;
 import com.az.studyforge.document.entity.FileType;
 import com.az.studyforge.document.repository.DocumentRepository;
-import com.az.studyforge.document.storage.FileStorage;
+import com.az.studyforge.document.filestorage.FileStorage;
 import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
