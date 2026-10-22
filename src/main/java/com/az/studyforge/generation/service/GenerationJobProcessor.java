@@ -35,6 +35,7 @@ public class GenerationJobProcessor {
 
     static final String USER_FAILURE_MESSAGE = "We couldn't generate questions right now. Please try again later.";
     private static final int MAX_PER_CALL = 15;
+    private static final int MAX_PREVIOUS = 30;
 
     private final JobQueue queue;
     private final QuizSetRepository quizSetRepository;
@@ -115,7 +116,7 @@ public class GenerationJobProcessor {
 
     private void runChunk(QuizSet set, GenerationChunk chunk, PlannedChunk planned, Object writeLock) {
         ChunkSpec spec = new ChunkSpec(planned.pageFrom(), planned.pageTo(), planned.pages(),
-                planned.mcqTarget(), planned.essayTarget(), set.getLanguage(), List.of());
+                planned.mcqTarget(), planned.essayTarget(), set.getLanguage(), previousQuestions(set, planned));
 
         String lastError = "Unknown error";
         for (int attempt = 1; attempt <= props.chunkMaxAttempts(); attempt++) {
@@ -172,6 +173,7 @@ public class GenerationJobProcessor {
     }
 
     private boolean copyFromCacheIfAvailable(ClaimedJob job, QuizSet set) {
+        if (!set.isUseCache()) return false;                                       // E4: "tạo bộ khác" → luôn gọi LLM
         if (questionRepository.countByQuizSetId(set.getId()) > 0) return false;   // đang chạy dở: không ghi đè
 
         Optional<QuizSet> source = quizSetRepository
@@ -225,7 +227,8 @@ public class GenerationJobProcessor {
 
     private void topUpChunk(QuizSet set, GenerationChunk donor, PlannedChunk planned,
                             int mcq, int essay, QuestionMix target, Object writeLock) {
-        List<String> avoid = questionRepository.findContentsByChunkId(donor.getId());
+        List<String> avoid = new ArrayList<>(questionRepository.findContentsByChunkId(donor.getId()));
+        avoid.addAll(previousQuestions(set, planned));                 // câu trong bộ này trước, rồi tới bộ cũ
         ChunkSpec spec = new ChunkSpec(planned.pageFrom(), planned.pageTo(), planned.pages(),
                 mcq, essay, set.getLanguage(), avoid);
         try {
@@ -237,5 +240,17 @@ public class GenerationJobProcessor {
         } catch (InvalidLlmOutputException | LlmUnavailableException ex) {
             log.warn("Chunk {} top-up failed: {}", donor.getChunkIndex(), ex.getMessage());
         }
+    }
+
+    /** E4: câu ở các bộ cũ (cùng user, cùng tài liệu, cùng khoảng trang) để LLM tránh. Bộ thường → rỗng. */
+    private List<String> previousQuestions(QuizSet set, PlannedChunk planned) {
+        if (set.isUseCache()) return List.of();
+        List<String> types = switch (set.getQuestionType()) {
+            case MCQ -> List.of("MCQ");
+            case ESSAY -> List.of("ESSAY");
+            case MIXED -> List.of("MCQ", "ESSAY");
+        };
+        return questionRepository.findPreviousContents(set.getUserId(), set.getDocumentId(), set.getId(),
+                planned.pageFrom(), planned.pageTo(), types, MAX_PREVIOUS);
     }
 }

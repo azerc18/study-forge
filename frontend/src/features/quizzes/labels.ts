@@ -1,4 +1,4 @@
-import { ApiError } from '../../lib/api.ts'
+import { ApiError } from '../../lib/api'
 import type { OutputLanguage, QuestionType } from '../documents/api'
 
 export const TYPE_LABELS: Record<QuestionType, string> = {
@@ -35,4 +35,23 @@ export function createErrorMessage(err: unknown): string {
     }
   }
   return 'Could not start generating. Please try again.'
+}
+
+/** Lỗi khi nộp bài tự luận → câu dễ hiểu cho user. */
+export function feedbackErrorMessage(err: unknown): string {
+  if (err instanceof ApiError) {
+    switch (err.code) {
+      case 'FEEDBACK_LIMIT_EXCEEDED': {
+        const d = err.details as { dailyLimit?: number; resetsAt?: string } | undefined
+        const when = d?.resetsAt ? ` Try again after ${resetFormat.format(new Date(d.resetsAt))}.` : ''
+        const limit = d?.dailyLimit ? ` of ${d.dailyLimit}` : ''
+        return `You've reached today's limit${limit} AI gradings.${when}`
+      }
+      case 'FEEDBACK_UNAVAILABLE':
+        return 'The AI grader is busy right now. Your answer is still here — please try again in a moment.'
+      case 'VALIDATION_ERROR':
+        return 'Your answer is empty or longer than 3,000 characters.'
+    }
+  }
+  return 'Could not grade your answer. Please try again.'
 }

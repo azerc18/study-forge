@@ -4,6 +4,7 @@ import com.az.studyforge.common.dto.ApiResponse;
 import com.az.studyforge.common.security.CurrentUser;
 import com.az.studyforge.generation.dto.CreateQuizSetRequest;
 import com.az.studyforge.generation.dto.QuizSetResponse;
+import com.az.studyforge.generation.dto.QuotaResponse;
 import com.az.studyforge.generation.service.QuizSetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,12 @@ public class QuizSetController {
         return ResponseEntity.accepted()
                 .location(URI.create("/api/quiz-sets/" + set.id()))
                 .body(ApiResponse.success(HttpStatus.ACCEPTED, set, "Generation queued"));
+    }
+
+    /** Đặt trước "/{id}" cho dễ đọc; Spring vẫn ưu tiên path cố định hơn path có biến. */
+    @GetMapping("/quota")
+    public ApiResponse<QuotaResponse> quota(@AuthenticationPrincipal Jwt jwt) {
+        return ApiResponse.success(quizSetService.quota(CurrentUser.id(jwt)));
     }
 
     @GetMapping("/{id}")

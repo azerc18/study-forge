@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { Question, QuestionOption } from './api'
-import { buttonClass } from '../../components/ui/button.ts'
+import type { Question, QuestionOption } from './api.ts'
+import EssayPractice from './EssayPractice.tsx'
 
 function SourcePages({ pages }: { pages: number[] }) {
   if (pages.length === 0) return null
@@ -58,51 +58,14 @@ function McqBody({ question, revealAll }: { question: Question; revealAll: boole
   )
 }
 
-function EssayBody({ question, revealAll }: { question: Question; revealAll: boolean }) {
-  const [shown, setShown] = useState(false)
-  const revealed = revealAll || shown
-
-  if (!revealed) {
-    return (
-      <button
-        type="button"
-        onClick={() => setShown(true)}
-        className={`mt-4 ${buttonClass('secondary')}`}
-      >
-        Show model answer
-      </button>
-    )
-  }
-
-  return (
-    <div className="mt-4 space-y-3 text-sm">
-      {question.modelAnswer && (
-        <div className="rounded-2xl bg-slate-50 px-4 py-3">
-          <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">Model answer</p>
-          <p className="mt-1 whitespace-pre-wrap text-slate-700">{question.modelAnswer}</p>
-        </div>
-      )}
-      {question.rubric.length > 0 && (
-        <div className="px-1">
-          <p className="text-xs font-medium tracking-wide text-slate-500 uppercase">Key points</p>
-          <ul className="mt-1 list-disc space-y-1 pl-5 text-slate-600">
-            {question.rubric.map((point, i) => (
-              <li key={i}>{point}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/** 1 câu hỏi. MCQ: bấm đáp án để tự kiểm tra; Essay: bấm để xem đáp án mẫu. */
+/** 1 câu hỏi. MCQ: bấm đáp án để tự kiểm tra; Essay: viết câu trả lời và nhận nhận xét của AI. */
 export default function QuestionCard({ question, revealAll }: { question: Question; revealAll: boolean }) {
   return (
     <li className="rounded-3xl border border-slate-100 bg-white/80 p-5 shadow-sm sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <p className="text-xs font-medium text-slate-400">
           {question.orderIndex}. {question.type === 'MCQ' ? 'Multiple choice' : 'Essay'}
+          {question.topic && <span className="font-normal"> · {question.topic}</span>}
         </p>
         <SourcePages pages={question.sourcePages} />
       </div>
@@ -111,7 +74,7 @@ export default function QuestionCard({ question, revealAll }: { question: Questi
       {question.type === 'MCQ' ? (
         <McqBody question={question} revealAll={revealAll} />
       ) : (
-        <EssayBody question={question} revealAll={revealAll} />
+        <EssayPractice question={question} revealAll={revealAll} />
       )}
     </li>
   )

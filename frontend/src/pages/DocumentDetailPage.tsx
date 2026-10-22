@@ -2,7 +2,7 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useToast } from '../components/toast/toast-context'
 import { ApiError } from '../lib/api'
-import { buttonClass } from '../components/ui/button.ts'
+import { buttonClass } from '../components/ui/button'
 import {
   isProcessing,
   type DocumentItem,
@@ -10,13 +10,14 @@ import {
   type OutputLanguage,
   type QuestionType,
 } from '../features/documents/api'
-import DeleteButton from '../features/documents/DeleteButton.tsx'
+import DeleteButton from '../features/documents/DeleteButton'
 import StatusBadge from '../features/documents/StatusBadge'
 import { formatBytes, formatDate, formatNumber } from '../features/documents/format'
 import { useDeleteDocument, useDocument, useGenerationOptions } from '../features/documents/queries'
 import { createErrorMessage, LANGUAGE_LABELS, TYPE_LABELS } from '../features/quizzes/labels'
 import QuizSetRow from '../features/quizzes/QuizSetRow'
-import { useCreateQuizSet, useQuizSets } from '../features/quizzes/queries'
+import QuotaNote from '../features/quizzes/QuotaNote.tsx'
+import { useCreateQuizSet, useQuota, useQuizSets } from '../features/quizzes/queries.ts'
 
 /** Nút chọn dạng "viên thuốc", dùng cho cả 3 nhóm lựa chọn. */
 function Choice({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: ReactNode }) {
@@ -45,12 +46,22 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function PracticeSetForm({ doc, options }: { doc: DocumentItem; options: GenerationOptions }) {
+function PracticeSetForm({
+  doc,
+  options,
+  existingSets,
+}: {
+  doc: DocumentItem
+  options: GenerationOptions
+  existingSets: number
+}) {
   const [type, setType] = useState<QuestionType>('MCQ')
   const [count, setCount] = useState<number | null>(null)
   const [language, setLanguage] = useState<OutputLanguage>('EN')
   const [title, setTitle] = useState('')
   const create = useCreateQuizSet()
+  const quota = useQuota()
+  const noneLeft = quota.data != null && quota.data.remaining <= 0
   const navigate = useNavigate()
   const toast = useToast()
 
@@ -116,14 +127,22 @@ function PracticeSetForm({ doc, options }: { doc: DocumentItem; options: Generat
         </p>
       )}
 
-      <div className="pt-2">
+      {existingSets > 0 && (
+        <p className="rounded-2xl bg-brand/40 px-4 py-3 text-sm text-brand-ink">
+          You already have {existingSets} {existingSets === 1 ? 'set' : 'sets'} from this document. The new set will
+          avoid repeating those questions.
+        </p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2">
         <button
           type="submit"
-          disabled={create.isPending}
-          className="rounded-full bg-brand px-6 py-3 font-medium text-brand-ink transition hover:bg-brand-strong disabled:cursor-wait disabled:opacity-60"
+          disabled={create.isPending || noneLeft}
+          className="rounded-full bg-brand px-6 py-3 font-medium text-brand-ink transition hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-60"
         >
           {create.isPending ? 'Starting…' : `Generate ${selectedCount} questions`}
         </button>
+        <QuotaNote />
       </div>
     </form>
   )
@@ -150,6 +169,7 @@ function DocumentQuizSets({ documentId }: { documentId: string }) {
 
 function ReadyPanel({ doc }: { doc: DocumentItem }) {
   const options = useGenerationOptions(doc.id, true)
+  const sets = useQuizSets(0, doc.id) // dùng chung cache với danh sách bên dưới, không gọi API thêm
 
   if (options.isPending) {
     return <div className="h-64 animate-pulse rounded-2xl bg-slate-50" />
@@ -157,7 +177,7 @@ function ReadyPanel({ doc }: { doc: DocumentItem }) {
   if (options.isError) {
     return <p className="text-sm text-red-600">Couldn't load the options for this document.</p>
   }
-  return <PracticeSetForm doc={doc} options={options.data} />
+  return <PracticeSetForm doc={doc} options={options.data} existingSets={sets.data?.totalElements ?? 0} />
 }
 
 function StatusPanel({ doc }: { doc: DocumentItem }) {

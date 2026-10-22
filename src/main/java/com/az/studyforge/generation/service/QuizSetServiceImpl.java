@@ -8,6 +8,7 @@ import com.az.studyforge.document.service.DocumentService;
 import com.az.studyforge.generation.config.GenerationProperties;
 import com.az.studyforge.generation.dto.CreateQuizSetRequest;
 import com.az.studyforge.generation.dto.QuizSetResponse;
+import com.az.studyforge.generation.dto.QuotaResponse;
 import com.az.studyforge.generation.entity.GenerationJob;
 import com.az.studyforge.generation.entity.QuizSet;
 import com.az.studyforge.generation.llm.promt.PromptBuilder;
@@ -52,10 +53,15 @@ public class QuizSetServiceImpl implements QuizSetService {
         }
         checkQuota(user);                                                                   // ④
 
+        // E4: đã có bộ trên tài liệu này → bộ mới phải KHÁC: bỏ cache, tránh lặp câu của các bộ cũ
+        long previousSets = quizSetRepository.countByUserIdAndDocumentIdAndDeletedAtIsNull(userId, doc.id());
+        boolean fresh = previousSets > 0;
+
         QuizSet set = quizSetRepository.save(QuizSet.builder()                              // ⑥
                 .userId(userId)
                 .documentId(doc.id())
-                .title(titleOf(req.title(), doc.originalFilename()))
+                .title(titleOf(req.title(), doc.originalFilename(), previousSets))
+                .useCache(!fresh)
                 .questionType(req.questionType())
                 .requestedCount(req.count())
                 .language(req.language())
@@ -79,17 +85,30 @@ public class QuizSetServiceImpl implements QuizSetService {
                 .orElseThrow(() -> new AppException(ErrorCode.QUIZ_SET_NOT_FOUND));
     }
 
-    private void checkQuota(User user) {
+    @Override
+    @Transactional(readOnly = true)
+    public QuotaResponse quota(UUID userId) {
+        return usage(userService.getActiveUser(userId));
+    }
+
+    /** Đếm cả bộ đã xoá: xoá bộ đề không hoàn lại lượt. */
+    private QuotaResponse usage(User user) {
         ZoneId zone = props.quotaZone();
         LocalDate today = LocalDate.now(clock.withZone(zone));
         Instant startOfDay = today.atStartOfDay(zone).toInstant();
 
-        long usedToday = quizSetRepository.countByUserIdAndCreatedAtGreaterThanEqual(user.getId(), startOfDay);
-        if (usedToday >= user.getDailyQuota()) {
-            Instant resetsAt = today.plusDays(1).atStartOfDay(zone).toInstant();
+        int usedToday = (int) quizSetRepository.countByUserIdAndCreatedAtGreaterThanEqual(user.getId(), startOfDay);
+        int remaining = Math.max(0, user.getDailyQuota() - usedToday);
+        return new QuotaResponse(user.getDailyQuota(), usedToday, remaining,
+                today.plusDays(1).atStartOfDay(zone).toInstant());
+    }
+
+    private void checkQuota(User user) {
+        QuotaResponse quota = usage(user);
+        if (quota.remaining() <= 0) {
             throw new AppException(ErrorCode.QUOTA_EXCEEDED,
-                    "You have used all %d generations for today".formatted(user.getDailyQuota()),
-                    Map.of("dailyQuota", user.getDailyQuota(), "resetsAt", resetsAt.toString()),
+                    "You have used all %d generations for today".formatted(quota.dailyQuota()),
+                    Map.of("dailyQuota", quota.dailyQuota(), "resetsAt", quota.resetsAt().toString()),
                     null);
         }
     }
@@ -101,9 +120,20 @@ public class QuizSetServiceImpl implements QuizSetService {
     }
 
     static String titleOf(String requested, String filename) {
-        String title = requested != null && !requested.isBlank()
-                ? requested.strip()
-                : filename.replaceFirst("\\.[^.]+$", "");
-        return title.length() <= MAX_TITLE ? title : title.substring(0, MAX_TITLE);
+        return titleOf(requested, filename, 0);
+    }
+
+    /** Không nhập tiêu đề và đã có N bộ trên tài liệu → "Chapter 05 (N+1)". */
+    static String titleOf(String requested, String filename, long previousSets) {
+        if (requested != null && !requested.isBlank()) return cut(requested.strip(), MAX_TITLE);
+
+        String base = filename.replaceFirst("\\.[^.]+$", "");
+        if (previousSets == 0) return cut(base, MAX_TITLE);
+        String suffix = " (" + (previousSets + 1) + ")";
+        return cut(base, MAX_TITLE - suffix.length()) + suffix;
+    }
+
+    private static String cut(String s, int max) {
+        return s.length() <= max ? s : s.substring(0, max);
     }
 }

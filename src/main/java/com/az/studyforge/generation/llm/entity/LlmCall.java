@@ -54,4 +54,9 @@ public class LlmCall {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private LlmPurpose purpose = LlmPurpose.GENERATION;
 }

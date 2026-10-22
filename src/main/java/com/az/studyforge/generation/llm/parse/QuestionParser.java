@@ -29,9 +29,9 @@ public class QuestionParser {
     public ParseResult parse(String raw, ChunkSpec chunk) {
         JsonNode root;
         try {
-            root = json.readTree(CODE_FENCE.matcher(raw.strip()).replaceAll(""));
+            root = json.readTree(extractJsonObject(raw));
         } catch (JacksonException e) {
-            throw new InvalidLlmOutputException("Response is not valid JSON", e);
+            throw new InvalidLlmOutputException("Response is not valid JSON: " + e.getOriginalMessage(), e);
         }
 
         JsonNode items = root.path("questions");
@@ -155,6 +155,13 @@ public class QuestionParser {
         if (v.isEmpty()) throw new Rejected(field + " is empty");
         if (v.length() > MAX_TEXT) throw new Rejected(field + " is too long");
         return v;
+    }
+
+    static String extractJsonObject(String raw) {
+        String s = raw.strip();
+        int start = s.indexOf('{');
+        int end = s.lastIndexOf('}');
+        return start >= 0 && end > start ? s.substring(start, end + 1) : s;
     }
 
     private static String str(JsonNode n) {

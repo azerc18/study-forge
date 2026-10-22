@@ -2,16 +2,17 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { useToast } from '../components/toast/toast-context'
 import { ApiError } from '../lib/api'
-import { buttonClass } from '../components/ui/button.ts'
-import DeleteButton from '../features/documents/DeleteButton.tsx'
+import { buttonClass } from '../components/ui/button'
+import DeleteButton from '../features/documents/DeleteButton'
 import { formatDate } from '../features/documents/format'
-import { hasQuestions, isGenerating, type QuizSet } from '../features/quizzes/api'
-import EditableTitle from '../features/quizzes/EditableTitle.tsx'
+import { hasQuestions, isGenerating, type QuizSet } from '../features/quizzes/api.ts'
+import EditableTitle from '../features/quizzes/EditableTitle'
 import GenerationProgress from '../features/quizzes/GenerationProgress'
+import NewSetButton from '../features/quizzes/NewSetButton.tsx'
 import { LANGUAGE_LABELS, TYPE_LABELS } from '../features/quizzes/labels'
-import QuestionCard from '../features/quizzes/QuestionCard.tsx'
+import QuestionCard from '../features/quizzes/QuestionCard'
 import QuizStatusBadge from '../features/quizzes/QuizStatusBadge'
-import { useDeleteQuizSet, useQuestions, useQuizSet, useRetryQuizSet } from '../features/quizzes/queries'
+import { useDeleteQuizSet, useQuestions, useQuizSet, useRetryQuizSet } from '../features/quizzes/queries.ts'
 
 function FailedPanel({ set }: { set: QuizSet }) {
   const retry = useRetryQuizSet()
@@ -155,18 +156,21 @@ export default function QuizSetPage() {
         </div>
       )}
 
-      <div className="mt-6 flex justify-end">
-        <DeleteButton
-          label="Delete quiz set"
-          size="md"
-          pending={remove.isPending}
-          onConfirm={() =>
-            remove.mutate(set.id, {
-              onSuccess: () => navigate('/quiz-sets', { replace: true }),
-              onError: () => toast.show('Could not delete this quiz set.', 'error'),
-            })
-          }
-        />
+      <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+        {hasQuestions(set.status) && <NewSetButton set={set} />}
+        <div className="ml-auto">
+          <DeleteButton
+            label="Delete quiz set"
+            size="md"
+            pending={remove.isPending}
+            onConfirm={() =>
+              remove.mutate(set.id, {
+                onSuccess: () => navigate('/quiz-sets', { replace: true }),
+                onError: () => toast.show('Could not delete this quiz set.', 'error'),
+              })
+            }
+          />
+        </div>
       </div>
     </section>
   )

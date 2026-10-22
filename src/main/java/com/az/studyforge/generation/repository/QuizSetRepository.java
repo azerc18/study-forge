@@ -13,6 +13,7 @@ import java.util.UUID;
 public interface QuizSetRepository extends JpaRepository<QuizSet, UUID> {
     Optional<QuizSet> findByIdAndUserIdAndDeletedAtIsNull(UUID id, UUID userId);
     long countByUserIdAndCreatedAtGreaterThanEqual(UUID userId, Instant from);
+    long countByUserIdAndDocumentIdAndDeletedAtIsNull(UUID userId, UUID documentId);
     Optional<QuizSet> findFirstByCacheKeyAndStatusAndDeletedAtIsNullAndIdNotOrderByCreatedAtAsc(
             String cacheKey, QuizSetStatus status, UUID excludeId);
     Page<QuizSet> findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(UUID userId, Pageable pageable);

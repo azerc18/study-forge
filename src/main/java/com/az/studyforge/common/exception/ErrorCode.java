@@ -38,6 +38,12 @@ public enum ErrorCode {
     QUIZ_SET_NOT_FOUND(HttpStatus.NOT_FOUND, "Quiz set not found"),
     QUIZ_SET_NOT_READY(HttpStatus.CONFLICT, "Questions are not ready yet"),
     QUIZ_SET_NOT_RETRYABLE(HttpStatus.CONFLICT, "Only failed quiz sets can be retried"),
+
+    // ===== Essay feedback =====
+    QUESTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Question not found"),
+    NOT_AN_ESSAY_QUESTION(HttpStatus.BAD_REQUEST, "Only essay questions can be graded"),
+    FEEDBACK_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Daily grading limit reached"),
+    FEEDBACK_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "The AI grader is busy. Please try again in a moment"),
     ;
 
     private final HttpStatus status;
