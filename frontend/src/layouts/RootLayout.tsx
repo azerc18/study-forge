@@ -44,6 +44,11 @@ function UserMenu() {
                 <NavLink to="/quiz-sets" className={navClass}>
                     Quiz sets
                 </NavLink>
+                {user.role === 'ADMIN' && (
+                    <NavLink to="/admin" className={navClass}>
+                        Admin
+                    </NavLink>
+                )}
             </nav>
             <Link to="/profile" aria-label="Your profile" className="rounded-full transition hover:ring-2 hover:ring-brand">
                 {user.avatarUrl ? (

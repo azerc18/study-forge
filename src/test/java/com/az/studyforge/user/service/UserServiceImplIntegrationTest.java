@@ -59,7 +59,7 @@ class UserServiceImplIntegrationTest {
         assertThat(saved.getEmail()).isEqualTo("a@test.com");
         assertThat(saved.getFullName()).isEqualTo("Toan");
         assertThat(saved.getRole()).isEqualTo(Role.USER);
-        assertThat(saved.getDailyQuota()).isEqualTo(5);
+        assertThat(saved.getDailyQuota()).isEqualTo(10);
         assertThat(saved.isLocked()).isFalse();
         assertThat(saved.getLastLoginAt()).isNotNull();
         assertThat(saved.getCreatedAt()).isNotNull();

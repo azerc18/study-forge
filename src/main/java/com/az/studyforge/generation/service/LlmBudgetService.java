@@ -97,7 +97,8 @@ public class LlmBudgetService {
         cache = null;
     }
 
-    double cost(List<ProviderUsage> usages) {
+    /** public để admin tính chi phí theo ngày bằng đúng công thức giá này. */
+    public double cost(List<ProviderUsage> usages) {
         double total = 0;
         for (ProviderUsage u : usages) {
             Provider p = providers.get(u.provider());
