@@ -41,6 +41,7 @@ public class QuizSetServiceImpl implements QuizSetService {
     private final GenerationJobRepository jobRepository;
     private final GenerationProperties props;
     private final Clock clock;
+    private final LlmBudgetService budget;
 
     @Override
     @Transactional
@@ -51,6 +52,7 @@ public class QuizSetServiceImpl implements QuizSetService {
         if (!limitPolicy.isAllowed(req.questionType(), req.count(), doc.wordCount())) {    // ③
             throw new AppException(ErrorCode.INVALID_QUESTION_COUNT);
         }
+        budget.check();                                                                     // hết ngân sách AI → 503, không trừ lượt
         checkQuota(user);                                                                   // ④
 
         // E4: đã có bộ trên tài liệu này → bộ mới phải KHÁC: bỏ cache, tránh lặp câu của các bộ cũ
@@ -91,7 +93,9 @@ public class QuizSetServiceImpl implements QuizSetService {
         return usage(userService.getActiveUser(userId));
     }
 
-    /** Đếm cả bộ đã xoá: xoá bộ đề không hoàn lại lượt. */
+    /**
+     * Đếm cả bộ đã xoá: xoá bộ đề không hoàn lại lượt.
+     */
     private QuotaResponse usage(User user) {
         ZoneId zone = props.quotaZone();
         LocalDate today = LocalDate.now(clock.withZone(zone));
@@ -123,7 +127,9 @@ public class QuizSetServiceImpl implements QuizSetService {
         return titleOf(requested, filename, 0);
     }
 
-    /** Không nhập tiêu đề và đã có N bộ trên tài liệu → "Chapter 05 (N+1)". */
+    /**
+     * Không nhập tiêu đề và đã có N bộ trên tài liệu → "Chapter 05 (N+1)".
+     */
     static String titleOf(String requested, String filename, long previousSets) {
         if (requested != null && !requested.isBlank()) return cut(requested.strip(), MAX_TITLE);
 

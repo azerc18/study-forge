@@ -5,6 +5,7 @@ import com.az.studyforge.generation.llm.dto.LlmRequest;
 import com.az.studyforge.generation.llm.dto.LlmResult;
 import com.az.studyforge.generation.llm.exception.LlmException;
 import com.az.studyforge.generation.llm.exception.LlmUnavailableException;
+import com.az.studyforge.generation.service.LlmBudgetService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
@@ -22,20 +23,25 @@ public class FallbackLlmClient implements LlmClient {
     private final List<OpenAiCompatibleClient> clients;
     private final int maxRetries;
     private final LlmCallLogger callLogger;
+    private final LlmBudgetService budget;
 
-    public FallbackLlmClient(LlmProperties props, JsonMapper jsonMapper, LlmCallLogger callLogger) {
+    public FallbackLlmClient(LlmProperties props, JsonMapper jsonMapper, LlmCallLogger callLogger,
+                             LlmBudgetService budget) {
         this.clients = props.providers().stream()
                 .filter(LlmProperties.Provider::enabled)
                 .map(p -> new OpenAiCompatibleClient(p, jsonMapper))
                 .toList();
         this.maxRetries = props.maxRetries();
         this.callLogger = callLogger;
+        this.budget = budget;
         log.info("LLM providers in order: {}", clients.stream().map(OpenAiCompatibleClient::name).toList());
     }
 
     @Override
     public LlmResult complete(LlmRequest request) {
         if (clients.isEmpty()) throw new LlmUnavailableException("No LLM provider configured");
+        // Chốt chặn cuối: mọi lần gọi AI (tạo đề, top-up, chấm bài) đều đi qua đây
+        if (budget.isExceeded()) throw new LlmUnavailableException("Daily AI budget exceeded");
 
         LlmException last = null;
         for (OpenAiCompatibleClient client : clients) {

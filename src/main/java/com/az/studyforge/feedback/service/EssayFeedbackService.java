@@ -24,6 +24,7 @@ import com.az.studyforge.generation.llm.exception.LlmUnavailableException;
 import com.az.studyforge.generation.llm.parse.InvalidLlmOutputException;
 import com.az.studyforge.generation.repository.QuestionRepository;
 import com.az.studyforge.generation.repository.QuizSetRepository;
+import com.az.studyforge.generation.service.LlmBudgetService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -54,6 +55,7 @@ public class EssayFeedbackService {
     private final GenerationProperties generationProps;
     private final JsonMapper json;
     private final Clock clock;
+    private final LlmBudgetService budget;
 
     private record EssayContext(Question question, List<String> rubric, OutputLanguage language, UUID documentId) {}
 
@@ -61,6 +63,7 @@ public class EssayFeedbackService {
     public EssayFeedbackResponse submit(UUID userId, UUID questionId, String rawAnswer) {
         String answer = rawAnswer.strip();
         EssayContext ctx = loadContext(userId, questionId);   // ①
+        budget.check();                                       // hết ngân sách AI → 503 trước khi tính lượt
         checkDailyLimit(userId);                              // ②
         String material = material(ctx);                      // ③
 
