@@ -44,6 +44,12 @@ public enum ErrorCode {
     NOT_AN_ESSAY_QUESTION(HttpStatus.BAD_REQUEST, "Only essay questions can be graded"),
     FEEDBACK_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "Daily grading limit reached"),
     FEEDBACK_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "The AI grader is busy. Please try again in a moment"),
+
+    // ===== Exam =====
+    EXAM_NOT_FOUND(HttpStatus.NOT_FOUND, "Exam not found"),
+    NO_MCQ_QUESTIONS(HttpStatus.CONFLICT, "This quiz set has no multiple-choice questions to take as an exam"),
+    INVALID_EXAM_ANSWER(HttpStatus.BAD_REQUEST, "Answer does not belong to this exam"),
+
     ;
 
     private final HttpStatus status;
