@@ -71,7 +71,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.result.user.email").value("a@test.com"))
                 .andExpect(jsonPath("$.result.user.fullName").value("Toan"))
                 .andExpect(jsonPath("$.result.user.role").value("USER"))
-                .andExpect(jsonPath("$.result.dailyQuota").value(5))
+                .andExpect(jsonPath("$.result.dailyQuota").value(10))
                 .andExpect(jsonPath("$.errorCode").doesNotExist());
     }
 

@@ -1,8 +1,5 @@
-// API client: giữ access token trong bộ nhớ, tự gọi /refresh khi gặp 401.
-
 const API_BASE: string = import.meta.env.VITE_API_URL ?? ''
 
-// Đổi thành '/api/user/me' nếu backend giữ đường dẫn số ít
 export const ME_PATH = '/api/users/me'
 
 export type Role = 'USER' | 'ADMIN'

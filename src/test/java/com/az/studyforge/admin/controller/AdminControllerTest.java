@@ -21,6 +21,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -51,7 +52,8 @@ class AdminControllerTest {
     private static final Instant T = Instant.parse("2026-10-23T03:00:00Z");
 
     private RequestPostProcessor as(String role) {
-        return jwt().jwt(j -> j.subject(adminId.toString()).claim("role", role));
+        return jwt().jwt(j -> j.subject(adminId.toString()).claim("role", role))
+                .authorities(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
     private AdminUserRow row(int quota, boolean locked) {
@@ -200,4 +202,6 @@ class AdminControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("QUIZ_SET_NOT_RETRYABLE"));
     }
+
+
 }
