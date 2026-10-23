@@ -51,6 +51,7 @@ public enum ErrorCode {
     INVALID_EXAM_ANSWER(HttpStatus.BAD_REQUEST, "Answer does not belong to this exam"),
 
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many requests. Please slow down and try again shortly"),
+    AI_BUDGET_EXCEEDED(HttpStatus.SERVICE_UNAVAILABLE, "The AI service has reached today's limit. Please try again tomorrow"),
 
     ;
 

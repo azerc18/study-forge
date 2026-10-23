@@ -27,9 +27,12 @@ public class GenerationWorker {
     private final GenerationJobProcessor processor;
     private final ThreadPoolTaskExecutor generationJobExecutor;
     private final GenerationProperties props;
+    private final LlmBudgetService budget;
 
     @Scheduled(initialDelay = 5, fixedDelay = 2, timeUnit = TimeUnit.SECONDS)
     public void poll() {
+        // Hết ngân sách AI: để job nằm QUEUED tới hôm sau, thay vì chạy rồi fail
+        if (budget.isExceeded()) return;
         while (generationJobExecutor.getActiveCount() < props.maxConcurrentJobs()) {
             Optional<ClaimedJob> job = queue.claim(workerId);
             if (job.isEmpty()) return;

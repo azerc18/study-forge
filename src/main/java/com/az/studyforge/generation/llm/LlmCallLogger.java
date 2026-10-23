@@ -3,6 +3,7 @@ package com.az.studyforge.generation.llm;
 import com.az.studyforge.generation.llm.dto.LlmRequest;
 import com.az.studyforge.generation.llm.dto.LlmResult;
 import com.az.studyforge.generation.llm.entity.LlmCall;
+import com.az.studyforge.generation.llm.entity.LlmPurpose;
 import com.az.studyforge.generation.llm.exception.LlmException;
 import com.az.studyforge.generation.llm.repository.LlmCallRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ public class LlmCallLogger {
 
     public void success(LlmRequest req, LlmResult res, int latencyMs) {
         save(LlmCall.builder()
-                .quizSetId(req.quizSetId()).chunkId(req.chunkId())
+                .quizSetId(req.quizSetId()).chunkId(req.chunkId()).purpose(purpose(req))
                 .provider(res.provider()).model(res.model())
                 .promptTokens(res.promptTokens()).completionTokens(res.completionTokens())
                 .latencyMs(latencyMs).success(true).httpStatus(200)
@@ -29,11 +30,15 @@ public class LlmCallLogger {
         String msg = e.getMessage() == null ? null
                 : e.getMessage().length() <= 500 ? e.getMessage() : e.getMessage().substring(0, 500);
         save(LlmCall.builder()
-                .quizSetId(req.quizSetId()).chunkId(req.chunkId())
+                .quizSetId(req.quizSetId()).chunkId(req.chunkId()).purpose(purpose(req))
                 .provider(provider).model(model)
                 .latencyMs(latencyMs).success(false).httpStatus(e.getHttpStatus())
                 .errorMessage(msg)
                 .build());
+    }
+
+    private static LlmPurpose purpose(LlmRequest req) {
+        return req.purpose() != null ? req.purpose() : LlmPurpose.GENERATION;
     }
 
     private void save(LlmCall call) {

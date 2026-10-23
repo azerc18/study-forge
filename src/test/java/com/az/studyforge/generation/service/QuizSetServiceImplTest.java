@@ -54,6 +54,7 @@ class QuizSetServiceImplTest {
     @Mock QuestionLimitPolicy limitPolicy;
     @Mock QuizSetRepository quizSetRepository;
     @Mock GenerationJobRepository jobRepository;
+    @Mock LlmBudgetService budget;
 
     private final UUID userId = UUID.randomUUID();
     private final UUID documentId = UUID.randomUUID();
@@ -71,7 +72,7 @@ class QuizSetServiceImplTest {
     private QuizSetServiceImpl serviceAt(Instant now) {
         return new QuizSetServiceImpl(userService, documentService, limitPolicy, quizSetRepository,
                 jobRepository, new GenerationProperties(VN, 2, 3, 2, Duration.ofMinutes(15), 2),
-                Clock.fixed(now, ZoneOffset.UTC));
+                Clock.fixed(now, ZoneOffset.UTC), budget);
     }
 
     private CreateQuizSetRequest validRequest() {
@@ -180,6 +181,20 @@ class QuizSetServiceImplTest {
 
         assertErrorCode(() -> serviceAt(NOW).create(userId, validRequest()), ErrorCode.ACCOUNT_LOCKED);
         verifyNoInteractions(documentService, quizSetRepository, jobRepository);
+    }
+
+    // B1: hết ngân sách AI → 503, không tính lượt, không lưu gì
+    @Test
+    void create_aiBudgetExceeded_throwsBeforeQuotaAndSave() {
+        when(userService.lockActiveUser(userId)).thenReturn(user);
+        when(documentService.getForGeneration(userId, documentId)).thenReturn(doc);
+        when(limitPolicy.isAllowed(QuestionType.MCQ, 10, 3000)).thenReturn(true);
+        doThrow(new AppException(ErrorCode.AI_BUDGET_EXCEEDED)).when(budget).check();
+
+        assertErrorCode(() -> serviceAt(NOW).create(userId, validRequest()), ErrorCode.AI_BUDGET_EXCEEDED);
+        verify(quizSetRepository, never()).countByUserIdAndCreatedAtGreaterThanEqual(any(), any());
+        verify(quizSetRepository, never()).save(any());
+        verifyNoInteractions(jobRepository);
     }
 
     // ===== quota =====

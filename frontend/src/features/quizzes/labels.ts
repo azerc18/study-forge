@@ -32,6 +32,8 @@ export function createErrorMessage(err: unknown): string {
         return 'This document no longer exists.'
       case 'ACCOUNT_LOCKED':
         return 'Your account has been locked.'
+      case 'AI_BUDGET_EXCEEDED':
+        return "The AI service has reached today's limit. Please try again tomorrow."
     }
   }
   return 'Could not start generating. Please try again.'
@@ -51,6 +53,8 @@ export function feedbackErrorMessage(err: unknown): string {
         return 'The AI grader is busy right now. Your answer is still here — please try again in a moment.'
       case 'VALIDATION_ERROR':
         return 'Your answer is empty or longer than 3,000 characters.'
+      case 'AI_BUDGET_EXCEEDED':
+        return "The AI service has reached today's limit. Please try again tomorrow."
     }
   }
   return 'Could not grade your answer. Please try again.'
