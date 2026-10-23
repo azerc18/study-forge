@@ -67,6 +67,39 @@ app:
   feedback:
     daily-limit: 30
     material-max-words: 3000
+  rate-limit:
+    enabled: true
+    rules:
+      - name: auth
+        methods: [ POST ]
+        path: /api/auth/**
+        key: IP
+        capacity: 20
+        period: 1m
+      - name: upload
+        methods: [ POST ]
+        path: /api/documents
+        capacity: 10
+        period: 1h
+      - name: generate
+        methods: [ POST ]
+        path: /api/quiz-sets
+        capacity: 5
+        period: 10m
+      - name: essay-feedback
+        methods: [ POST ]
+        path: /api/questions/*/essay-feedback
+        capacity: 6
+        period: 1m
+      - name: exam-start
+        methods: [ POST ]
+        path: /api/quiz-sets/*/exams
+        capacity: 20
+        period: 1h
+      - name: api
+        path: /api/**
+        capacity: 300
+        period: 1m
 
 security:
   jwt:
