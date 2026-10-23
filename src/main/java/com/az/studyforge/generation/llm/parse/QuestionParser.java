@@ -27,14 +27,8 @@ public class QuestionParser {
     }
 
     public ParseResult parse(String raw, ChunkSpec chunk) {
-        JsonNode root;
-        try {
-            root = json.readTree(extractJsonObject(raw));
-        } catch (JacksonException e) {
-            throw new InvalidLlmOutputException("Response is not valid JSON: " + e.getOriginalMessage(), e);
-        }
-
-        JsonNode items = root.path("questions");
+        JsonNode root = readRoot(raw);
+        JsonNode items = root.isArray() ? root : root.path("questions");
         if (!items.isArray()) throw new InvalidLlmOutputException("Missing \"questions\" array");
 
         List<GeneratedQuestion> accepted = new ArrayList<>();
@@ -162,6 +156,21 @@ public class QuestionParser {
         int start = s.indexOf('{');
         int end = s.lastIndexOf('}');
         return start >= 0 && end > start ? s.substring(start, end + 1) : s;
+    }
+
+    private JsonNode readRoot(String raw) {
+        String s = extractJsonObject(raw);
+        try {
+            return json.readTree(s);
+        } catch (JacksonException first) {
+            try {
+                JsonNode wrapped = json.readTree("[" + s + "]");
+                if (wrapped.size() > 1) return wrapped;
+            } catch (JacksonException ignored) {
+                // không cứu được → báo lỗi gốc
+            }
+            throw new InvalidLlmOutputException("Response is not valid JSON: " + first.getOriginalMessage(), first);
+        }
     }
 
     private static String str(JsonNode n) {
