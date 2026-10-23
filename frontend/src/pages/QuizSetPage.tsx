@@ -13,6 +13,7 @@ import { LANGUAGE_LABELS, TYPE_LABELS } from '../features/quizzes/labels'
 import QuestionCard from '../features/quizzes/QuestionCard'
 import QuizStatusBadge from '../features/quizzes/QuizStatusBadge'
 import { useDeleteQuizSet, useQuestions, useQuizSet, useRetryQuizSet } from '../features/quizzes/queries.ts'
+import ExamPanel from '../features/exams/ExamPanel'
 
 function FailedPanel({ set }: { set: QuizSet }) {
   const retry = useRetryQuizSet()
@@ -149,8 +150,9 @@ export default function QuizSetPage() {
           </div>
         )}
       </div>
+        {hasQuestions(set.status) && set.questionType !== 'ESSAY' && <ExamPanel set={set} />}
 
-      {hasQuestions(set.status) && (
+        {hasQuestions(set.status) && (
         <div className="mt-6">
           <QuestionList set={set} />
         </div>

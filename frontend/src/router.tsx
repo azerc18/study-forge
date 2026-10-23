@@ -9,6 +9,7 @@ import DocumentsPage from './pages/DocumentsPage'
 import DocumentDetailPage from './pages/DocumentDetailPage.tsx'
 import QuizSetsPage from './pages/QuizSetsPage.tsx'
 import QuizSetPage from './pages/QuizSetPage.tsx'
+import ExamPage from './pages/ExamPage'
 
 export const router = createBrowserRouter([
     {
@@ -21,6 +22,8 @@ export const router = createBrowserRouter([
                 // Các route cần đăng nhập đặt trong nhóm này
                 element: <RequireAuth />,
                 children: [
+                    { path: 'quiz-sets/:id', element: <QuizSetPage /> },
+                    { path: 'exams/:id', element: <ExamPage /> },
                     { path: 'profile', element: <ProfilePage /> },
                     { path: 'documents', element: <DocumentsPage /> },
                     { path: 'documents/:id', element: <DocumentDetailPage /> },
