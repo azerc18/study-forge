@@ -52,6 +52,7 @@ public enum ErrorCode {
 
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many requests. Please slow down and try again shortly"),
     AI_BUDGET_EXCEEDED(HttpStatus.SERVICE_UNAVAILABLE, "The AI service has reached today's limit. Please try again tomorrow"),
+    CANNOT_MODIFY_SELF(HttpStatus.BAD_REQUEST, "You cannot lock your own account or another admin"),
 
     ;
 

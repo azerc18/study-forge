@@ -39,7 +39,7 @@ public class User {
 
     @Column(name = "daily_quota", nullable = false)
     @Builder.Default
-    private Integer dailyQuota = 5;
+    private Integer dailyQuota = 10;
 
     @Column(name = "is_locked",nullable = false)
     @Builder.Default
