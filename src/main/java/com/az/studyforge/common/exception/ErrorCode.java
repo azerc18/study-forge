@@ -50,6 +50,8 @@ public enum ErrorCode {
     NO_MCQ_QUESTIONS(HttpStatus.CONFLICT, "This quiz set has no multiple-choice questions to take as an exam"),
     INVALID_EXAM_ANSWER(HttpStatus.BAD_REQUEST, "Answer does not belong to this exam"),
 
+    RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS, "Too many requests. Please slow down and try again shortly"),
+
     ;
 
     private final HttpStatus status;
