@@ -3,9 +3,6 @@ name: workflow.yml
 on:
   pull_request:
     paths-ignore: ['frontend/**']
-  push:
-    branches: [main]
-    paths-ignore: ['frontend/**']
 
 jobs:
   verify:
