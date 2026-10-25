@@ -1,2 +1,52 @@
+name: studyforge
+
 services:
-  
+  postgres:
+    image: postgres:17-alpine
+    env_file: .env.prod
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ..
+    env_file: .env.prod
+    environment:
+      DEFAULT_PROFILE: prod
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      STORAGE_DIR: /app/storage/uploads
+      JAVA_OPTS: "-Xms256m -Xmx1536m"     # VPS 4 GB thì có thể tăng lên -Xmx1536m
+    volumes:
+      - uploads:/app/storage/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../frontend/dist:/srv:ro
+      - caddy_data:/data          # giữ chứng chỉ HTTPS khi khởi động lại
+      - caddy_config:/config
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:
